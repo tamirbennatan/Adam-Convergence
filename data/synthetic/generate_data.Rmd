@@ -1,0 +1,65 @@
+````{R}
+library(dplyr)
+library(ggplot2)
+
+```
+
+
+## Generate Synthetic Data
+
+As described in the paper **"On the COnvergence of Adam and Beyond"**, section 5, pages 6-7.
+
+#### First dataset - Convex Dataset
+
+Generate a dataset of 10000 points, uniformly drawn from the domain [-1,1]. 
+
+```{R}
+set.seed(551)
+df.convex <- data_frame(t = 1:10000)
+df.convex['x'] = runif(n = 10000, min = -1, max = 1)
+
+df.convex <- df.convex %>%
+      mutate(y = ifelse( t %% 101 == 1, 1010*x, -10*x))
+```
+
+Sanity check:
+
+```{R}
+df.convex %>%
+      ggplot(aes(x = x, y = y)) +
+      geom_point()
+```
+
+Ok. 
+
+
+#### Second dataset - Stochastic Dataset
+
+Now choose from the two functions probabilistically. 
+
+```{R}
+set.seed(551)
+df.stoch <- data_frame(t = 1:10000)
+df.stoch['x'] = runif(n = 10000, min = -1, max = 1)
+df.stoch['choice'] =  runif(n = 10000, min = 0, max = 1)
+df.stoch <- df.stoch %>%
+      mutate(y = ifelse( choice < .01, 1010*x, -10*x))
+```
+
+Sanity check:
+
+```{R}
+df.stoch %>%
+      ggplot(aes(x = x, y = y)) +
+      geom_point()
+```
+
+Ok. 
+
+
+#### Write the files. 
+
+```{R}
+write.csv(df.convex, "convex.csv")
+write.csv(df.stoch, "stochastic.csv")
+```
