@@ -1,0 +1,10 @@
+A running list of links that we will need to cite at the end of this project.
+
+- Tuning optimization parameters using a gridsearch: https://machinelearningmastery.com/grid-search-hyperparameters-deep-learning-models-python-keras/
+- Citing keras:
+@misc{chollet2015keras,
+  title={Keras},
+  author={Chollet, Fran\c{c}ois and others},
+  year={2015},
+  howpublished={\url{https://keras.io}},
+}

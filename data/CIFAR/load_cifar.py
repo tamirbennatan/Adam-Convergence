@@ -11,9 +11,6 @@ This is a python-2.* script.
 
 import numpy as np 
 import cPickle
-
-import pdb
-
 # path to the data folder.
 DATA_DIR = "/Users/timibennatan/Downloads/cifar-10-batches-py/"
 
@@ -23,18 +20,18 @@ def unpickle(file):
     return dict
 
 def write_np_file(obj, file_name, mode = "wb"):
-	with open(file_name, mode) as handle:
-		np.save(handle, obj)
+    with open(file_name, mode) as handle:
+        np.save(handle, obj)
 
 # accumuate the training data/labels from the first 5 batches
 data, labels = [], []
 for i in range(1,6):
-	filename = DATA_DIR + ("data_batch_%d" %(i))
-	# unpickle the data
-	unpickled = unpickle(filename)
-	# add extracted data/labels
-	data.append(unpickled["data"])
-	labels.append(unpickled["labels"])
+    filename = DATA_DIR + ("data_batch_%d" %(i))
+    # unpickle the data
+    unpickled = unpickle(filename)
+    # add extracted data/labels
+    data.append(unpickled["data"])
+    labels.append(unpickled["labels"])
 
 # Consolidate one training set from all the batches
 X_train = np.vstack(data)
