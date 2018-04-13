@@ -9,6 +9,8 @@ from keras.layers import Dense, Dropout, Activation, Flatten, BatchNormalization
 from keras.layers import Conv2D, MaxPooling2D
 from keras.optimizers import Adam
 
+import pickle
+
 print("Tuning CNN Neural Network Models on CIFAR-10")
 
 
@@ -72,25 +74,25 @@ Setup gridsearches
 """
 Make a hyperparemter grid to search through
 """
-beta2_range = np.append(np.arange(.990, .999, .0025), .999)
-alpha_range = [.0001*10**i for i in range(5)]
+beta2_range = [.99, .999]
+alpha_range = [.00001, .0001, .001]
 param_grid = dict(lr=alpha_range, beta_2=beta2_range)
 
-"""
-Gridsearch through learning rate and beta_2 combinations, using the Adam optimizer
-"""
-adam_model = KerasClassifier(build_fn=get_cifar10_cnn, epochs=30, batch_size=128, verbose=0)
-adam_grid = GridSearchCV(estimator=adam_model, param_grid=param_grid, n_jobs=1, verbose=1)
-adam_grid_result = adam_grid.fit(X_train, y_train)
+# """
+# Gridsearch through learning rate and beta_2 combinations, using the Adam optimizer
+# """
+# adam_model = KerasClassifier(build_fn=get_cifar10_cnn, epochs=15, batch_size=128, verbose=1)
+# adam_grid = GridSearchCV(estimator=adam_model, param_grid=param_grid, n_jobs=1, verbose=1, cv = 2)
+# adam_grid_result = adam_grid.fit(X_train, y_train)
 
-"""
-Print the best parameters, and pickle the best model
-"""
-print("Best parameters for FFNN with Adam:")
-print(adam_grid_result.best_params_)
+# """
+# Print the best parameters, and pickle the best model
+# """
+# print("Best parameters for CNN with Adam:")
+# print(adam_grid_result.best_params_)
 
-with open("gridsearch_params/cifar_adam.pkl", "wb") as handle:
-    pickle.dump(adam_grid_result.best_params_, handle, protocol = 3)
+# with open("gridsearch_params/cifar_adam.pkl", "wb") as handle:
+#     pickle.dump(adam_grid_result.best_params_, handle, protocol = 3)
 
 """
 Gridsearch through learning rate and beta_2 combinations, using the AMSGrad optimizer
@@ -98,14 +100,14 @@ Gridsearch through learning rate and beta_2 combinations, using the AMSGrad opti
 # Same grid, but now using AMS optimizer
 param_grid_ams = dict(lr=alpha_range, beta_2=beta2_range, amsgrad = [True])
 
-ams_model = KerasClassifier(build_fn=get_cifar10_cnn, epochs=30, batch_size=128, verbose=1)
-ams_grid = GridSearchCV(estimator=ams_model, param_grid=param_grid_ams, n_jobs=1, verbose = 1)
+ams_model = KerasClassifier(build_fn=get_cifar10_cnn, epochs=15, batch_size=128, verbose=1)
+ams_grid = GridSearchCV(estimator=ams_model, param_grid=param_grid_ams, n_jobs=1, verbose = 1, cv = 2)
 ams_grid_result = ams_grid.fit(X_train, y_train)
 
 """
 Print the best parameters, and pickle the best model
 """
-print("Best parameters for FFNN with AMSGrad Optimizer:")
+print("Best parameters for CNN with AMSGrad Optimizer:")
 print(ams_grid_result.best_params_)
 
 with open("gridsearch_params/cifar_ams.pkl", "wb") as handle:
