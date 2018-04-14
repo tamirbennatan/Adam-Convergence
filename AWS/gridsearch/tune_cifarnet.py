@@ -8,7 +8,6 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten, BatchNormalization
 from keras.layers import Conv2D, MaxPooling2D
 from keras.optimizers import Adam
-from keras.callbacks import EarlyStopping
 
 import pickle
 
@@ -51,10 +50,10 @@ def get_cifar10_cnn(lr=0.01, beta_2 = .99, amsgrad = False, decay = .14):
     model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
     return model
 
-X_train = np.load("data/CIFAR/X_train.npy")
-X_test = np.load("data/CIFAR/X_test.npy")
-y_train = np.load("data/CIFAR/y_train.npy")
-y_test = np.load("data/CIFAR/y_test.npy")
+X_train = np.load("../data/CIFAR/X_train.npy")
+X_test = np.load("../data/CIFAR/X_test.npy")
+y_train = np.load("../data/CIFAR/y_train.npy")
+y_test = np.load("../data/CIFAR/y_test.npy")
 
 """
 Reshape the data to work with CNN
@@ -68,9 +67,6 @@ else:
     X_train = X_train.reshape(trainlength, 3, 32, 32)
     X_test = X_test.reshape((testlength, 3, 32, 32))
 
-callbacks = [
-    EarlyStopping(monitor='loss', patience=2, verbose=0),
-]
 
 """
 Setup gridsearches
@@ -78,33 +74,43 @@ Setup gridsearches
 """
 Make a hyperparemter grid to search through
 """
-beta2_range = [.999, .99]
-alpha_range = [ .0001, .001, .00001]
+beta2_range = [.99, .999]
+alpha_range = [.00001, .0001, .001]
+param_grid = dict(lr=alpha_range, beta_2=beta2_range)
 
-best_beta = None
-best_alpha = None
-best_acc = -1
+# """
+# Gridsearch through learning rate and beta_2 combinations, using the Adam optimizer
+# """
+# adam_model = KerasClassifier(build_fn=get_cifar10_cnn, epochs=15, batch_size=128, verbose=1)
+# adam_grid = GridSearchCV(estimator=adam_model, param_grid=param_grid, n_jobs=1, verbose=1, cv = 2)
+# adam_grid_result = adam_grid.fit(X_train, y_train)
 
+# """
+# Print the best parameters, and pickle the best model
+# """
+# print("Best parameters for CNN with Adam:")
+# print(adam_grid_result.best_params_)
 
+# with open("gridsearch_params/cifar_adam.pkl", "wb") as handle:
+#     pickle.dump(adam_grid_result.best_params_, handle, protocol = 3)
 
-for beta in beta2_range:
-    for alpha in alpha_range:
-        # get a model
-        model = get_cifar10_cnn(lr = alpha, beta_2 = beta)
-        # train for 25 epochs
-        print("TRAINING: alpha = %f, beta2 = %f" %(alpha, beta))
-        history = model.fit(X_train, y_train, epochs = 25, callbacks = callbacks)
+"""
+Gridsearch through learning rate and beta_2 combinations, using the AMSGrad optimizer
+"""
+# Same grid, but now using AMS optimizer
+param_grid_ams = dict(lr=alpha_range, beta_2=beta2_range, amsgrad = [True])
 
-        # get the training accuracy
-        acc = max(history.history['acc'])
-        if acc > best_acc:
-            best_acc = acc
-            best_beta = beta
-            best_alpha = alpha
+ams_model = KerasClassifier(build_fn=get_cifar10_cnn, epochs=15, batch_size=128, verbose=1)
+ams_grid = GridSearchCV(estimator=ams_model, param_grid=param_grid_ams, n_jobs=1, verbose = 1, cv = 2)
+ams_grid_result = ams_grid.fit(X_train, y_train)
 
-print("Best alpha " + str(best_alpha))
-print("Best beta" + str(best_beta))
+"""
+Print the best parameters, and pickle the best model
+"""
+print("Best parameters for CNN with AMSGrad Optimizer:")
+print(ams_grid_result.best_params_)
 
-best_params = {"alpha": best_alpha, "beta2": best_beta}
-with open("cifarnet_ams.pkl", "wb") as handle:
-    pickle.dump(best_params, handle)
+with open("gridsearch_params/cifar_ams.pkl", "wb") as handle:
+    pickle.dump(ams_grid_result.best_params_, handle,  protocol = 3)
+
+print("Done tuning CIFARNET ")
