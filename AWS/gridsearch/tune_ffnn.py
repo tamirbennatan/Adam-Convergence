@@ -23,10 +23,10 @@ def create_model(lr=0.01, beta_2 = .99, amsgrad = False):
     return model
 
 
-X_train = np.load("data/MNIST/X_train.npy") 
-X_test = np.load("data/MNIST/X_test.npy") 
-y_train = np.load("data/MNIST/y_train.npy") 
-y_test = np.load("data/MNIST/y_test.npy") 
+X_train = np.load("../data/MNIST/X_train.npy") 
+X_test = np.load("../data/MNIST/X_test.npy") 
+y_train = np.load("../data/MNIST/y_train.npy") 
+y_test = np.load("../data/MNIST/y_test.npy") 
 
 """
 Make a hyperparemter grid to search through
