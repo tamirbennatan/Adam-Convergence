@@ -94,7 +94,7 @@ for optimizer in ["Adam", "AMSGrad"]:
         # record the validation loss/accuracy every 100 batches.
         run_history = LossHistory(X_test, y_test, every = 100)
         print()
-        print("Training model with <%s> optimizer, run <%d>." %(optimizer, run))
+        print("Training model with <%s> optimizer, run <%d>, alpha = <%f>, beta2 = <%f>" %(optimizer, run, alpha, beta_2))
         # train that ish for <epochs> epochs.
         _ = model.fit(X_train, y_train, batch_size=batch, epochs=epochs, verbose=1, 
             callbacks = [run_history])

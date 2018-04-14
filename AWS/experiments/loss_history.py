@@ -11,11 +11,21 @@ Metrics:
     - test loss
     - training accuracy
     - test accuracy
+
+Note - computing the validation loss/accuracy is slow. It should not be done at 
+the end of every epoch. Therefore, the constructor of this callback requires an
+<every> parameter, which specifies the interval of batches with which to calculate 
+the validation accuracy/loss. 
+
+How to set <every>? Well, the point of calculating loss on a per-batch basis is so that
+you can get a more fine tuned view of how the model is converging. So if you want to tune
+for 20 epochs, and have a line chart in mind, perhaps it would be nice to have 200 points to 
+plot (10 per epoch), so you would set every to (number of data points)/(batch size * 10)
 """
 
 class LossHistory(Callback):
 
-    def __init__(self, X_test, y_test, every = 60):
+    def __init__(self, X_test, y_test, every):
         self.X_test = X_test
         self.y_test = y_test
         self.every = every
