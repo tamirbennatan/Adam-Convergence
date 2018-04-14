@@ -38,7 +38,7 @@ param_grid = dict(lr=alpha_range, beta_2=beta2_range)
 """
 Gridsearch through learning rate and beta_2 combinations, using the Adam optimizer
 """
-adam_model = KerasClassifier(build_fn=create_model, epochs=30, batch_size=128, verbose=0)
+adam_model = KerasClassifier(build_fn=create_model, epochs=30, batch_size=128, verbose=1)
 adam_grid = GridSearchCV(estimator=adam_model, param_grid=param_grid, n_jobs=1, verbose=1)
 adam_grid_result = adam_grid.fit(X_train, y_train)
 
