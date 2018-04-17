@@ -8,3 +8,5 @@ A running list of links that we will need to cite at the end of this project.
   year={2015},
   howpublished={\url{https://keras.io}},
 }
+- Experiments with AMSGrad - inspiration for plots and multiple runs:
+https://fdlm.github.io/post/amsgrad/

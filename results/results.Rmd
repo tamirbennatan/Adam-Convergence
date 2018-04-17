@@ -1,0 +1,136 @@
+```{R}
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+```
+
+## Training Run Results
+
+### 1. Introduction
+
+In the paper [On The Convergence of Adam and Beyond,](https://openreview.net/forum?id=ryQu7f-RZ), the authors present the results of one training run for each of the different models, once when trained using Adam and once using AMSGrad. 
+
+Since each run may vary due random initializations, we thought it would be better to run each model multiple times and track the training progress. Thus, we have trained each of the models 5 times with different random initializations using each optimizer for each model. 
+
+### 2. Experimental Results
+
+First, loading the logs from each of the training runs:
+
+```{R}
+logreg_log <- read.csv("./experimental/logs/logreg_4-15_20-38.csv")
+ffnn_log <- read.csv("./experimental/logs/ffnn_4-16_10-56.csv")
+cifar_log <- read.csv("./experimental/logs/cifarnet_4-16_4-20.csv")
+```   
+
+#### 2.1 Plotting Functions
+
+Here, I'll make some general purpose functions for plotting the results of each training log:
+
+```{R}
+plot.train_loss <- function(df) {
+      df %>%
+            mutate(group = paste(run,optimizer)) %>%
+            ggplot(aes(x = epoch, y = train_loss, group = group, color = optimizer))+
+            geom_line() + 
+            ylab("Training Loss")
+}
+```
+
+```{R}
+plot.valid_loss <- function(df){
+    df %>%
+      mutate(group = paste(run,optimizer)) %>%
+      ggplot(aes(x = epoch, y = valid_loss, group = group, color = optimizer))+
+      geom_line() + 
+      ylab("Validation Loss")
+}
+```
+```{R}
+plot.train_accuracy <- function(df, title){
+    df %>%
+      mutate(group = paste(run,optimizer)) %>%
+      ggplot(aes(x = epoch, y = train_acc, group = group, color = optimizer))+
+      geom_line(size = 1.2, alpha = .7) + 
+      ylab("Training Accuracy") + 
+      labs(title = title)  
+}
+```
+```{R}
+plot.valid_accuracy <- function(df, title){
+    df %>%
+      mutate(group = paste(run,optimizer)) %>%
+      ggplot(aes(x = epoch, y = valid_acc, group = group, color = optimizer))+
+      geom_line(size = 1.2, alpha = .7) + 
+      ylab("Validation Accuracy") + 
+      labs(title = title)  
+}
+```
+```{R}
+get.summary <- function(df){
+      df %>%
+            group_by(epoch, optimizer) %>%
+            mutate(max.train_acc = max(train_acc), 
+                   min.train_acc = min(train_acc), 
+                   max.train_loss = max(train_loss), 
+                   min.train_loss = min(train_loss), 
+                   max.valid_acc = max(valid_acc), 
+                   min.valid_acc = min(valid_acc), 
+                   max.valid_loss = max(valid_loss),
+                   min.valid_loss = min(valid_loss)) %>%
+            ungroup()
+      }
+```
+```{R}
+summary.train_loss <- function(df){
+ tmp = df %>%  
+      filter(epoch == max(epoch)) %>%
+      group_by(optimizer) %>%
+      mutate(median.metric = median(train_loss)) %>%
+      ungroup() %>%
+      filter(train_loss == median.metric) %>%
+      select(optimizer, run)
+ 
+ get.summary(df) %>%
+       inner_join(tmp, 
+                 by = c("optimizer", "run")
+      ) %>%
+      ggplot(aes(x = epoch, y = train_loss, ymin = min.train_loss, ymax = max.train_loss,  fill = optimizer)) +
+      geom_line(aes(x = epoch, y = train_loss, color = optimizer), size = 1.2) + 
+      geom_ribbon(alpha = .13)
+}
+```
+
+
+##### 2.1 Logistic Regression Results
+
+First, plotting the losses:
+
+```{R}
+summary.train_loss(logreg_log)
+```
+
+
+
+```{R}
+plot.train_loss(logreg_log, title = "Logistic Regression Runs")
+```
+
+##### 2.2 Feedforward Neural Network Results
+
+
+Feedforward Neural Network Runs
+
+```{R}
+ffnn_log %>%
+      plot.train_loss("Feedforward Neural Network Runs")
+```
+
+
+##### 2.3 Cifarnet Runs
+
+
+```{R}
+cifar_log %>% 
+      plot.train_loss("Cifarnet Runs")
+```
+

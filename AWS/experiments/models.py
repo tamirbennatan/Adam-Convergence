@@ -9,6 +9,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten, BatchNormalization
 from keras.layers import Conv2D, MaxPooling2D
 from keras.optimizers import Adam
+from keras.metrics import categorical_accuracy
 
 
 def get_cifar10_cnn(lr=0.01, beta_2 = .99, amsgrad = False):
@@ -45,7 +46,7 @@ def get_cifar10_cnn(lr=0.01, beta_2 = .99, amsgrad = False):
     Compile model with optimization hyperparameters
     """
     optimizer = Adam(lr=lr, beta_2 = beta_2, amsgrad = amsgrad)
-    model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=[categorical_accuracy])
     return model
 
 
@@ -57,7 +58,7 @@ def get_ffnn(lr=0.01, beta_2 = .99, amsgrad = False):
     
     # Compile model
     optimizer = Adam(lr=lr, beta_2 = beta_2, amsgrad = amsgrad)
-    model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=[categorical_accuracy])
     return model
 
 def get_logreg(lr=0.01, beta_2 = .99, amsgrad = False):
@@ -66,5 +67,5 @@ def get_logreg(lr=0.01, beta_2 = .99, amsgrad = False):
     model.add(Dense(10, input_dim=784, activation='softmax'))
     # Compile model
     optimizer = Adam(lr=lr, beta_2 = beta_2, amsgrad = amsgrad)
-    model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=[categorical_accuracy])
     return model
