@@ -1,0 +1,118 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%2345678901234567890123456789012345678901234567890123456789012345678901234567890
+%        1         2         3         4         5         6         7         8
+
+\documentclass[letterpaper, 10 pt, conference]{ieeeconf}  % Comment this line out
+                                                          % if you need a4paper
+%\documentclass[a4paper, 10pt, conference]{ieeeconf}      % Use this line for a4
+                                                          % paper
+
+\IEEEoverridecommandlockouts                              % This command is only
+                                                          % needed if you want to
+                                                          % use the \thanks command
+\overrideIEEEmargins
+% See the \addtolength command later in the file to balance the column lengths
+% on the last page of the document
+
+
+
+% The following packages can be found on http:\\www.ctan.org
+%\usepackage{graphics} % for pdf, bitmapped graphics files
+%\usepackage{epsfig} % for postscript graphics files
+%\usepackage{mathptmx} % assumes new font selection scheme installed
+%\usepackage{times} % assumes new font selection scheme installed
+\usepackage{caption}
+\usepackage{subfig}
+\usepackage{amsmath} % assumes amsmath package installed
+\usepackage{bm}
+\usepackage{amssymb}  % assumes amsmath package installed
+\usepackage{boldline}
+\usepackage{array,multirow}
+\usepackage{hyperref}
+\usepackage{color}
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+\definecolor{light-gray}{gray}{0.95}
+\newcommand{\code}[1]{\colorbox{light-gray}{\texttt{#1}}}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\maxU}{max}
+\usepackage{makecell}
+\usepackage{bbm}
+\usepackage[table,xcdraw]{xcolor}
+\usepackage[flushleft]{threeparttable}
+\usepackage[utf8]{inputenc}
+\usepackage{xfrac}
+\usepackage{capt-of}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{authblk}
+
+
+\title{\LARGE \bf
+Reproducibility Project: Final Report \\
+\large A Look at ``On the Convergence of Adam and Beyond"
+}
+
+\author[1]{Tamir Bennatan}
+\author[2]{Lea Collin}
+\author[3]{Emmanuel Ng Cheng Hin}
+\affil[1]{ID: 260614526, email: tamir.bennatan@mail.mcgill.ca}
+\affil[2]{ID: 260618407, email: lea.collin@mail.mcgill.ca}
+\affil[3]{ID: 260615964, email: emmanuel.ngchenghin@mail.mcgill.ca}
+
+\makeatletter
+\def\BState{\State\hskip-\ALG@thistlm}
+\makeatother
+
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{INTRODUCTION}
+
+	The authors of the paper present issues with the popular stochastic gradient descent optimizers: RMSProp and ADAM, focusing mainly on ADAM. ADAM uses exponential moving averages of squared past gradients, which limits the reliance of parameter updates to only the last few gradients. Though ADAM has been proven to be very useful in many settings, it has also been shown to fail to converge to optimal solutions in other settings. The usual problem in these other settings is that large, informative gradients during updates occur infrequently. Because ADAM limits the reliance of parameter updates to only the past few gradients, the influence of these informative gradients quickly die out due to the use of exponential moving averages, leading to poor convergence. \par
+	An adversarial example is presented where there is a clear optimal solution yet ADAM fails to find it and actually converges to the worst solution. The example is as follows:
+\[
+    f_{t}(x) = 
+    \begin{cases}
+     	Cx, \hspace{5mm} \text{for } t \text{ mod 3 = 1} \\
+        -x, \hspace{5mm} \text{otherwise}
+    \end{cases}
+\]
+where $C>2$. It is easy to see that the value of $x$ that leads to the minimum regret is $-1$, however, the authors show that ADAM converges to the highly suboptimal solution of $x = +1$. This elucidates the intuition that the influence of the large gradient $C$ disappears too quickly to counteract the gradient of $-1$, which moves the algorithm in the wrong direction. 
+
+\section{METHODOLOGY}
+
+\section{RESULTS}
+
+\section{DISCUSSION}
+
+\addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
+                                  % on the last page of the document manually. It shortens
+                                  % the textheight of the last page by a suitable amount.
+                                  % This command does not take effect until the next page
+                                  % so it should come on the page before the last. Make
+                                  % sure that you do not shorten the textheight too much.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\end{document}
