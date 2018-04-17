@@ -1,9 +1,9 @@
 CifarNet:
-  AMSGrad: {alpha: 0.001, beta: 0.999}
-  Adam: {alpha: 0.0001, beta: 0.99}
+  AMSGrad: {alpha: 0.001, beta: 0.99}
+  Adam: {alpha: 0.001, beta: 0.99}
 FFNN:
-  AMSGrad: {alpha: 0.0001, beta: 0.999}
-  Adam: {alpha: 0.0001, beta: 0.99}
+  AMSGrad: {alpha: 0.001, beta: 0.999}
+  Adam: {alpha: 0.001, beta: 0.99}
 LogReg:
   AMSGrad: {alpha: 0.001, beta: 0.999}
   Adam: {alpha: 0.001, beta: 0.999}

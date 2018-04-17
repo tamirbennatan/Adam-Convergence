@@ -1,5 +1,5 @@
 """
-Run the Feedforwarnd neural network experiments. 
+Run the Logistic Regression experiments. 
 Run <epochs> epochs, to be passed as a command line argument.
 Repeat for <runs> runs, with different random initialializations each time. 
 Store training and test losses, as well as accuracies, on a per-batch basis.
@@ -13,13 +13,16 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
 from keras.utils import np_utils
+from keras.callbacks import LearningRateScheduler
+
+from sklearn.metrics import accuracy_score
 
 import argparse
 import yaml
 import datetime
 
 # custom functions/classes
-from models import get_ffnn
+from models import get_logreg
 import pdb
 
 
@@ -42,8 +45,8 @@ load the tuned hyperparameters as a dictionary
 with open("param_config.yml", "r") as handle:
     hyperparam_config = yaml.load(handle)
 handle.close()
-# isolate hyperparameters regarding FFNN
-ffnn_params = hyperparam_config["FFNN"]
+# isolate hyperparameters regarding Logistic Regression
+logreg_params = hyperparam_config["LogReg"]
 
 """
 Keep track of a log of all the runs, and the relevent metrics:
@@ -75,6 +78,14 @@ y_train = np_utils.to_categorical(y_train)
 y_test = np_utils.to_categorical(y_test)
 
 """
+define a learning rate sheduler. 
+The effective learning rate is the learning rate, divided by the square root 
+of the epoch number
+"""
+
+# make sure model is new with each 
+model = None
+"""
 For each of the possible optimizers,
 train for <epochs> epochs for each of the <runs> runs.
 """
@@ -84,17 +95,23 @@ for optimizer in ["Adam", "AMSGrad"]:
         # are we using Adam, or AMSGrad? 
         amsgrad = optimizer == "AMSGrad"
         # isolate the other hyperaparmeters
-        alpha = ffnn_params[optimizer]["alpha"]
-        beta_2 = ffnn_params[optimizer]["beta"]
+        alpha = logreg_params[optimizer]["alpha"]
+        beta_2 = logreg_params[optimizer]["beta"]
+
+        def effective_lr(epoch):
+            return (.001/np.sqrt(1 + epoch))
+        lr_scheduler = LearningRateScheduler(effective_lr)
         
         # Get a  brand new model for each run - we need new random initializations
-        model = get_ffnn(lr = alpha, beta_2 = beta_2, amsgrad = amsgrad)
+        del model
+        model = get_logreg(lr = alpha, beta_2 = beta_2, amsgrad = amsgrad)
         # Construct a new History monitor, so that we can keep track of the losses.
         # record the validation loss/accuracy every 100 batches.
         print()
         print("Training model with <%s> optimizer, run <%d>, alpha = <%f>, beta2 = <%f>" %(optimizer, run, alpha, beta_2))
         # train that ish for <epochs> epochs.
-        run_history = model.fit(X_train, y_train, batch_size=batch, epochs=epochs, verbose=1, validation_data = (X_test, y_test))
+        run_history = model.fit(X_train, y_train, batch_size=batch, epochs=epochs, verbose=1, validation_data = (X_test, y_test), 
+            callbacks = [lr_scheduler])
         print()
 
         """
@@ -115,5 +132,5 @@ for optimizer in ["Adam", "AMSGrad"]:
 At the end of the experiment, write the experiment history to disk.
 """
 now = datetime.datetime.now()
-filename = "experiment_log/ffnn_%d-%d_%d-%d.csv" %(now.month, now.day, now.hour, now.minute)
+filename = "experiment_log/logreg_%d-%d_%d-%d.csv" %(now.month, now.day, now.hour, now.minute)
 experiment_log.to_csv(filename)

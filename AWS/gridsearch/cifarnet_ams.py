@@ -10,6 +10,8 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.optimizers import Adam
 from keras.utils import np_utils
 
+from keras.callbacks import EarlyStopping
+
 import pickle
 
 print("Tuning CNN Neural Network Models on CIFAR-10")
@@ -51,9 +53,9 @@ def get_cifar10_cnn(lr=0.01, beta_2 = .99, amsgrad = True, decay = .01):
     model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
     return model
 
-X_train = np.load("data/CIFAR/X_train.npy")
+X_train = np.load("../data/CIFAR/X_train.npy")
 # X_test = np.load("data/CIFAR/X_test.npy")
-y_train = np.load("data/CIFAR/y_train.npy")
+y_train = np.load("../data/CIFAR/y_train.npy")
 # y_test = np.load("data/CIFAR/y_test.npy")
 y_train = np_utils.to_categorical(y_train)
 
@@ -69,6 +71,13 @@ else:
     X_train = X_train.reshape(trainlength, 3, 32, 32)
     # X_test = X_test.reshape((testlength, 3, 32, 32))
 
+callbacks = [
+    EarlyStopping(monitor='loss', patience=, verbose=0),
+]
+
+"""
+Make a hyperparemter grid to search through
+"""
 beta2_range = [.999, .99]
 alpha_range = [ .0001, .001, .00001]
 
@@ -81,16 +90,18 @@ for beta in beta2_range:
         # get a model
         model = get_cifar10_cnn(lr = alpha, beta_2 = beta)
         # train for 25 epochs
-        history = model.fit(X_train, y_train, epochs = 25)
+        print("TRAINING: alpha = %f, beta2 = %f" %(alpha, beta))
+        history = model.fit(X_train, y_train, epochs = 25, callbacks = call)
 
-        # get the training accuracy
-        acc = history.history['val_acc']
+        
+# get the training accuracy
+        acc = max(history.history['acc'])
         if acc > best_acc:
             best_acc = acc
             best_beta = beta
             best_alpha = alpha
 
-print("Best alpha " + str(gest_alpha))
+print("Best alpha " + str(best_alpha))
 print("Best beta" + str(best_beta))
 
 best_params = {"alpha": best_alpha, "beta2": best_beta}

@@ -1,5 +1,5 @@
 """
-Run the Feedforwarnd neural network experiments. 
+Run the Logistic Regression experiments. 
 Run <epochs> epochs, to be passed as a command line argument.
 Repeat for <runs> runs, with different random initialializations each time. 
 Store training and test losses, as well as accuracies, on a per-batch basis.
@@ -9,8 +9,6 @@ import numpy as np
 import pandas as pd
 
 import keras.backend as K
-from keras.models import Sequential
-from keras.layers import Dense
 from keras.optimizers import Adam
 from keras.utils import np_utils
 
@@ -19,7 +17,7 @@ import yaml
 import datetime
 
 # custom functions/classes
-from models import get_ffnn
+from models import get_cifar10_cnn
 import pdb
 
 
@@ -42,8 +40,8 @@ load the tuned hyperparameters as a dictionary
 with open("param_config.yml", "r") as handle:
     hyperparam_config = yaml.load(handle)
 handle.close()
-# isolate hyperparameters regarding FFNN
-ffnn_params = hyperparam_config["FFNN"]
+# isolate hyperparameters regarding Logistic Regression
+cinfarnet_params = hyperparam_config["CifarNet"]
 
 """
 Keep track of a log of all the runs, and the relevent metrics:
@@ -65,14 +63,27 @@ experiment_log = pd.DataFrame({
 """
 Load the MNIST data.
 """
-X_train = np.load("../data/MNIST/X_train.npy") 
-X_test = np.load("../data/MNIST/X_test.npy") 
-y_train = np.load("../data/MNIST/y_train.npy") 
-y_test = np.load("../data/MNIST/y_test.npy") 
+X_train = np.load("../data/CIFAR/X_train.npy") 
+X_test = np.load("../data/CIFAR/X_test.npy") 
+y_train = np.load("../data/CIFAR/y_train.npy") 
+y_test = np.load("../data/CIFAR/y_test.npy") 
 
 # convert the labels to a one-hot encoding
 y_train = np_utils.to_categorical(y_train)
 y_test = np_utils.to_categorical(y_test)
+
+
+"""
+Reshape the data to work with CNN
+"""
+trainlength, testlength = X_train.shape[0], X_test.shape[0]
+# Reshape the X's, according to our channel setting. 
+if K.image_data_format() == "channels_last":
+    X_train = X_train.reshape(trainlength, 3, 32, 32).transpose(0,2,3,1)
+    X_test = X_test.reshape((testlength, 3, 32, 32)).transpose(0,2,3,1)
+else:
+    X_train = X_train.reshape(trainlength, 3, 32, 32)
+    X_test = X_test.reshape((testlength, 3, 32, 32))
 
 """
 For each of the possible optimizers,
@@ -84,11 +95,11 @@ for optimizer in ["Adam", "AMSGrad"]:
         # are we using Adam, or AMSGrad? 
         amsgrad = optimizer == "AMSGrad"
         # isolate the other hyperaparmeters
-        alpha = ffnn_params[optimizer]["alpha"]
-        beta_2 = ffnn_params[optimizer]["beta"]
+        alpha = cinfarnet_params[optimizer]["alpha"]
+        beta_2 = cinfarnet_params[optimizer]["beta"]
         
         # Get a  brand new model for each run - we need new random initializations
-        model = get_ffnn(lr = alpha, beta_2 = beta_2, amsgrad = amsgrad)
+        model = get_cifar10_cnn(lr = alpha, beta_2 = beta_2, amsgrad = amsgrad)
         # Construct a new History monitor, so that we can keep track of the losses.
         # record the validation loss/accuracy every 100 batches.
         print()
@@ -115,5 +126,5 @@ for optimizer in ["Adam", "AMSGrad"]:
 At the end of the experiment, write the experiment history to disk.
 """
 now = datetime.datetime.now()
-filename = "experiment_log/ffnn_%d-%d_%d-%d.csv" %(now.month, now.day, now.hour, now.minute)
+filename = "experiment_log/cifarnet_%d-%d_%d-%d.csv" %(now.month, now.day, now.hour, now.minute)
 experiment_log.to_csv(filename)
