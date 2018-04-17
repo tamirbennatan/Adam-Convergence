@@ -1,4 +1,3 @@
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %2345678901234567890123456789012345678901234567890123456789012345678901234567890
 %        1         2         3         4         5         6         7         8
@@ -22,15 +21,15 @@
 %\usepackage{epsfig} % for postscript graphics files
 %\usepackage{mathptmx} % assumes new font selection scheme installed
 %\usepackage{times} % assumes new font selection scheme installed
-\usepackage{caption}
-\usepackage{subfig}
 \usepackage{amsmath} % assumes amsmath package installed
-\usepackage{bm}
 \usepackage{amssymb}  % assumes amsmath package installed
 \usepackage{boldline}
 \usepackage{array,multirow}
+\usepackage{dblfloatfix} 
 \usepackage{hyperref}
+\usepackage{float}
 \usepackage{color}
+\usepackage{xfrac}
 \usepackage{graphicx}
 \graphicspath{ {images/} }
 \definecolor{light-gray}{gray}{0.95}
@@ -42,36 +41,36 @@
 \usepackage[table,xcdraw]{xcolor}
 \usepackage[flushleft]{threeparttable}
 \usepackage[utf8]{inputenc}
-\usepackage{xfrac}
 \usepackage{capt-of}
-\usepackage{algorithm}
-\usepackage[noend]{algpseudocode}
-\usepackage{authblk}
 
 
 \title{\LARGE \bf
-Reproducibility Project: Final Report \\
-\large A Look at ``On the Convergence of Adam and Beyond"
+A Closer Look At The Convergence of Adam and AMSGrad:\\A Reproduction Study
 }
 
-\author[1]{Tamir Bennatan}
-\author[2]{Lea Collin}
-\author[3]{Emmanuel Ng Cheng Hin}
-\affil[1]{ID: 260614526, email: tamir.bennatan@mail.mcgill.ca}
-\affil[2]{ID: 260618407, email: lea.collin@mail.mcgill.ca}
-\affil[3]{ID: 260615964, email: emmanuel.ngchenghin@mail.mcgill.ca}
+\author{ 
+	\parbox{2 in}{\centering Tamir Bennatan
+         {\tt\small tamir.bennatan@mail.mcgill.ca\\}
+         {\tt\small 260614526}}
+         \hspace*{ 0.3 in}
+         \parbox{2 in}{\centering Lea Collin
+         {\tt\small lea.collin@mail.mcgill.ca\\}
+         {\tt\small 260618407}}
+         \hspace*{0.3 in}
+         \parbox{2 in}{\centering Emmanuel Ng Cheng Hin
+         {\tt\small emmanuel.ngchenghin@mail.mcgill.ca\\}
+         {\tt\small 260615964}}
+}
 
-\makeatletter
-\def\BState{\State\hskip-\ALG@thistlm}
-\makeatother
 
 
 \begin{document}
 
+
+
 \maketitle
 \thispagestyle{empty}
 \pagestyle{empty}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
