@@ -38,6 +38,9 @@ def get_cifar10_cnn(lr=0.01, beta_2 = .99, amsgrad = False, decay = .14):
     model.add(Dense(384))
     model.add(Activation('relu'))
     model.add(Dropout(0.5))
+    model.add(Dense(192))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
     model.add(Dense(10))
     model.add(Activation('softmax'))
 

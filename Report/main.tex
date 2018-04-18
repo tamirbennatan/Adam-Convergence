@@ -43,7 +43,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage{capt-of}
 \usepackage{mathrsfs}
-
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
 
 \title{\LARGE \bf
 A Closer Look At The Convergence of Adam and AMSGrad:\\A Reproduction Study
@@ -74,35 +75,80 @@ A Closer Look At The Convergence of Adam and AMSGrad:\\A Reproduction Study
 \pagestyle{empty}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+\begin{abstract}
+This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. 
+\end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{INTRODUCTION}
 
-	The authors of the paper present issues with the popular stochastic gradient descent optimizers: RMSProp and ADAM, focusing mainly on ADAM. ADAM uses exponential moving averages of squared past gradients, which limits the reliance of parameter updates to only the last few gradients. Though ADAM has been proven to be very useful in many settings, it has also been shown to fail to converge to optimal solutions in certain cases. The usual problem in these other cases is that large, informative gradients during updates occur infrequently. Because ADAM limits the reliance of parameter updates to only the past few gradients, the influence of these informative gradients quickly die out due to the use of exponential moving averages, leading to poor convergence. \par
-    The paper introduces a toy example where it is obvious that ADAM does not converge to the optimal solution. The authors go on to discuss an incorrect assumption in the proof of convergence of ADAM that illuminates why ADAM does not converge in certain cases. Finally, the authors present a solution to the issue: AMSGrad. Their solution takes into consideration the ``long-term'' past history of gradients, so as not to lose the informative yet rare gradients that occur. The authors ran several experiments and compared the performance on training and test loss of both ADAM and AMSGrad. In this reproduction study, we aim to recreate these results as best as possible, while taking into consideration the cost of doing so. Additionally, we seek to identify any shortcomings or oversights of the authors. \newline
-     
-\section{THE NON-CONVERGENCE OF ADAM}
-The authors of this paper discuss in detail the issue with ADAM and point out an error in ADAM's proof of convergence. The quantity of interest in the proof is:
-$$
-	\Gamma_{t+1} = \Bigg(\frac{\sqrt{V_{t+1}}}{\alpha_{t+1}} - \frac{\sqrt{V_{t}}}{\alpha_{t}} \Bigg) 
-$$
+Amongst the deep learning community, Stochastic Gradient Descent (SGD) is the predominant method of training deep neural networks. As researchers and practitioners continue to experiment with larger networks with parameter spaces reaching hundreds of millions of dimensions, it has become of increasingly important in recent decades to optimize SGD, so that it may train large networks faster and more effectively. 
 
-This quantity essentially measures the change in the inverse of the learning rate of the adaptive method with respect to time. The update rules of stochastic gradient descent lead to ``non-increasing'' learning rates. What the authors point out, however, is that ADAM and RMSProp can have potentially indefinite $\Gamma_{t}$, which leads to a lack of convergence. The authors claim that this problem arises because algorithms like ADAM use exponential moving averages. \par
-The authors present a toy, adversarial example to illustrate their point on why ADAM fails to converge. The example is as follows, for $\mathcal{F} = [-1, 1]$:
+One such optimization to SGD is \emph{Adam} (Kingma, Ba; 2015). Inspired by previous variants of SGD which  apply time varying learning rates and momentum terms such as AdaGrad (Duchi et al.,
+2011) and RMSProp (Tieleman \& Hinton, 2012), Adam adjusts the learning rates and momentum terms associated with each paramter of a network using an eponential moving averages. In recent years, Adam has been shown to be effective in meany deep learning settings, and is considered a state of the art technique. 
+
+In the paper \emph{On the Convergence of Adam and Beyond}, authors Sashank, Kale and Kumar (2018) present a defect in the Adam method. Since Adam uses exponential moving averages of squared past gradients, the influence on past paramter updates drops off quickly - effectively limiting the reliance of parameter updates to a small set of recent gradients. The authors show that because of this property, Adam will fail to converge in convex optimization problems where large, informative gradients occur infrequently. 
+
+The authors propose a new optimization scheme - \emph{AMSGrad}, which aims to remedy this issue in Adam. To demonstrate that AMSGrad performs better than Adam, they devise a syntethic convex optimization problem, and show that AMSGrad converges to the optimzal solution, while Adam does not. They then train modest neural networks on the widely used MNIST and CIFAR-10 datasets using the Adam and AMSGrad optimizers, and show that AMSGrad converges to a lower loss than Adam. 
+
+In this paper, we recreate the experiments described in the paper\footnote{We refer to \emph{On the Convergence of Adam and Beyond} as simply \emph{``the paper"}, and \emph{``the authors"} as the authors of this paper throughout.} and aim to reproduce the authors' results. We compare our results with those of the authors, and discuss the challenges in recreating the experiments described in this paper. Finally, we present a brief sensitivity analysis, to gauge the variability in our findings.
+
+\section{AMSGrad: LONG TERM MEMORY OF GRADIENTS}
+
+Adaptive optimization procedures such as Adam yield different effecive learning rates for each of the different parameters of a model. Adam computes the effective learning rate using an exponential moving average of past squared gradients. 
+
+If we consider a model with a single parameter, $\theta$, then Adam uses the following update step to optimize the function $f(x)$ at time $t$:
+
+\begin{algorithm}
+\caption{Adam Update Rule}\label{Adam-update}
+\begin{algorithmic}[1]
+\State $g_t = \nabla_{\theta}f_t(x_t)$
+\State $m_t = \beta_{1t}m_{t-1} + (1 - \beta_{1t})g_t$ 
+\Comment{Adaptive Momentum}
+\State $v_t = \beta_2{v_{t-1}} + (1-\beta_2)g_t^2$
+\Comment{Adaptive learning rate}
+\State $\theta_{t + 1} := \theta_t - \alpha{v_t}$
+\end{algorithmic}
+\end{algorithm}
+Where $\alpha$ is the learning rate, and $(\beta_1, \beta_2)$ are hyperparameters chosen from the range $(0,1)$.
+
+The exponential moving average terms on lines 2 and 3 of Alg. 1 reduce the reliance of each update on past gradients geometrically. The authors show that because of this property, the effective learning rate of each parameter is not guarenteed to be non-decreasing, which causes convergence issues in particular settings. 
+
+To account for this, the authors modify Adam to ``remember" large gradients from further in the past:
+
+\begin{algorithm}
+\caption{AMSGrad Update Rule}\label{Adam-update}
+\begin{algorithmic}[1]
+\State $g_t = \nabla_{\theta}f_t(x_t)$
+\State $m_t = \beta_{1t}m_{t-1} + (1 - \beta_{1t})g_t$ 
+\State $v_t = \beta_2{v_{t-1}} + (1-\beta_2)g_t^2$
+\State $\hat{v_t} = max(\hat{v}_{t-1}, v_t)$
+\Comment{Propogate large updates}
+\State $\theta_{t + 1} := \theta_t - \alpha{\hat{v_t}}$
+\end{algorithmic}
+\end{algorithm}
+
+Line 4 of Alg. 2 enables AMSGrad to propogate the large gradients into the future, which increases their affect on future updates. The authors show that after making this small adjustment, AMSGrad guarentees non-increasing effective learning rates, and favorable convergence behaviour.
+
+To illistrate this, the authors propose a simple convex function on the domain $x \in [-1,1]$.:
 \[
-    f_{t}(x) = 
+    f(x) = 
     \begin{cases}
      	Cx, \hspace{5mm} \text{for } t \text{ mod 3 = 1} \\
         -x, \hspace{5mm} \text{otherwise}
     \end{cases}
 \]
-where $C>2$. It is easy to see that the value of $x$ that leads to the minimum regret is $-1$, however, the authors show that ADAM converges to the highly suboptimal solution of $x = +1$. This elucidates the intuition that the influence of the large gradient $C$ disappears too quickly to counteract the gradient of $-1$, which moves the algorithm in the wrong direction. \par
-As a solution to ADAM's shortcomings, the authors use a smaller learning rate in comparison to ADAM that still incorporates the intuition of slowly decaying the effect of past gradients on the learning rate, as long as $\Gamma_{t}$ is positive semidefinite. The solution they present is AMSGrad. \newline
+for $C>2$. The minimum value of  the value of $f$ is achieved at $x=-1$. However, the authors show that Adam converges to the suboptimal solution of $x = 1$, due to the fact that the large gradients with magnitude $C$ are recieved in large intervals. The influence of the large gradient $C$ disappears too quickly to counteract the gradients of $-1$, which moves the algorithm in the wrong direction. AMSGrad, on the other hand, is designed to account for these settings, and minimizes this function without difficulty.
 
-\section{METHODOLOGY}
-The authors ran several experiments to compare the performance of ADAM and AMSGrad. We wanted to recreate every experiment the authors ran, as closely as possible, in order to assess the reproducibility and validity of their results. 
-\par The first two experiments, which they refer to as synthetic experiments, are very similar to the toy example used to show the non-convergence of ADAM. The first synthetic experiment is with an online setting:
+\section{Experiments}
+
+
+The authors ran several experiments to compare the performance of ADAM and AMSGrad. In this section, we 
+describe the experiments run by the authors, and their reported results. 
+
+\subsection{Synthetic Experiments}
+
+The authors construct two convex functions on the domain $x \in [-1,1]$, designed to highlight Adam's shortcomings:
 
 \[
     f_{t}(x) = 
@@ -111,47 +157,128 @@ The authors ran several experiments to compare the performance of ADAM and AMSGr
         -10x, \hspace{5mm} \text{otherwise}
     \end{cases}
 \]
-
-while the second is with a stochastic setting:
+where $t$ is the time step at which the function is evaluated, and:
 
 \[
-    f_{t}(x) = 
+    f(x) = 
     \begin{cases}
      	1010x, \hspace{5mm} \text{with probability 0.01}\\
         -10x, \hspace{5mm} \text{otherwise}
     \end{cases}
 \]
 
-with both having the constraint set $\mathcal{F} = [-1, 1]$. Very similar to the general toy example, the optimal solutions are both clearly $x = -1$ and so the algorithms are expected to converge to this optimal value. \par
-For these experiments, we aimed to recreate both settings with the goal of reproducing the figures the authors included. The authors' results are shown in Figure 1. 
+Both functions reach a global minimum at $x = -1$. The first is refered to as the ``online setting", and the second as the ``stochastic setting."
 
-\begin{figure*}[]
+In the first experiment, the authors use Adam and AMSGrad to minimize both functions, and compare the convergence behaviour of each optimizer. The authors fix the values of  $\beta_{1}$ and $\beta_{2}$ as the authors at 0.9 and 0.99, respectively, and perform a grid search to find a learning rate $\alpha$ which yields good convergence for both optimizers. 
+
+\subsection{Logistic Regression on MNIST}
+
+The authors then investigated the performance of the algorithm on a logistic regression problem. They used the MNIST dataset, which contains 70,000 28x28 images of handwritten digits, labeled as one of 10 classes. The authors decrease the learning rate over time, where the effective learning rate $\alpha_t$ at time $t$ is defined as $\alpha / \sqrt{t}$. The authors train using minibatches of size of 128, and fix  $\beta_{1}$ as 0.9. They then perform grid search to select a value for $\beta_2$ in the range $(0.99, 0.999)$, based on what value yields the lowest validation loss for each optimizer. 
+
+\subsection{Feedforward Neural Network on MNIST}
+
+The authors trained a feedforward neural network (FFNN) with one hidden layer on the MNIST dataset as well. The hidden layer consists of 100 neurns, and use the ReLU nonlinearity. The authors fix $\beta_{1} = 0.9$, and use a grid to select $\beta_{2}$ from the range $(0.99, 0.999)$, based on which value yields the lowest validation loss for each optimizer.
+
+\subsection{Convolutional Neural Network on CIFAR-10}
+
+Finally, the authors experiment with a larger convolutional neural network (CNN), designed to classify images in the CIFAR-10 dataset. CIFAR-10 consists fo 60,000  32 x 32, labeled as one of 10 classes.
+
+The authors specify the architecture that they used (named \emph{Cifarnet}), which consists of two convolutional layers, max-pooling and batch-normilization layers, and two fully connected layers (see appendix 1 for a detailed specification of the architecture.)
+
+The authors trained CifarNet using a minibath of size 128 using each of the two optimizers.The authors fix $\beta_{1} = 0.9$, and perform a grid search to select $\beta_{2}$ from the range $(0.99, 0.999)$.
+
+\subsection{Results}
+
+The authors present their results by visualizing the losses of their models achieved during training using Adam and AMSGrad for each of the experiments discussed [figure 1]. These plots show that in all of the experiments, models trained using AMSGrad achieved lower losses and converged faster than those trained with Adam. These results bolster the author's claims that AMSGrad's dependence on long term gradients indeed ameliorates its convergence behavior.
+\begin{figure*}
+\begin{minipage}{1\textwidth}
 \centering
-\begin{minipage}{0.9\textwidth}
+\begin{minipage}{0.55\textwidth}
   \centering
-  \includegraphics[width=1\linewidth]{OG_Results_synth.png}
-  \label{fig:test1}
-\end{minipage}%
-\caption[]{The left two plots (left and center) are for the online setting and the last one (right) is for the stochastic setting. Note: these graphs were taken directly from the paper.}
-\end{figure*}
-
-To implement these synthetic experiments, we used the same values for $\beta_{1}$ and $\beta_{2}$ as the authors, 0.9 and 0.99, respectively, for both ADAM and AMSGrad. As the authors did, we looked at the regret and the value of the iterate $x_{t}$ for both algorithms. To find a ``good'' value for $\alpha$ we did a by-hand search through several values. (NEED TO ELABORATE ON THIS - ASK EMMANUEL). \par
-The authors then investigated the performance of the algorithm on a logistic regression problem. They used the MNIST dataset, which contains 784 dimensional image vectors that each belong to one of 10 classes. The authors are clear in describing the step size parameter they chose ($\alpha / \sqrt{t}$), the minibatch size (128), and $\beta_{1}$ (0.9). They do not specify the values of $\beta_{2}$ and $\alpha$ that they tried, however, they do mention that they chose these values using a grid search and they give the range of values they tried for $\beta_{2}$ (0.99 - 0.999). We initially ran one experiment of logistic regression with set values for all of the hyperparameters to confirm that these algorithms behave similarly to the way that the authors described, before we started looking at many different values. \par
-The authors then looked at the performance of ADAM and AMSGrad on different neural networks. They trained a 1-hidden layer, fully connected neural network on MNIST. Once again they specify that they used $\beta_{1} = 0.9$ and the range of $\beta_{2}$ that they tried (0.99 - 0.999). They also specify that they used 100 ReLU nodes in the hidden layer for the experiment and that they used a constant $\alpha_{t} = \alpha$. They again say that they performed a grid search to look through ranges of $\alpha$ and $\beta_{2}$. Similar to what we did for logistic regression, we ran the experiment once before doing the gridsearch to confirm that the algorithms behaved in a way that was expected. \par
-As a final experiment, the authors trained a convolutional neural network (CNN) on the standard CIFAR-10 dataset, which consists of 60,000 labeled 32 x 32 images. They specify the architecture that they used which has 2 convolutional layers with 64 channels and a kernel size of 6 x 6 followed by 2 fully connected layers of size 384 and 192. The network uses a 2 x 2 max pooling and layer response normalization between the convolutional layers. A dropout layer with keep probability of 0.5 was applied in between the fully connected layers. Once again, the minibatch size was set to 128, the same as the previous experiments. We followed the architecture almost exactly, though we used batch normalization rather than the layer response normalization the authors used. Once again, they state that they used a grid search to iterate through different values of $\alpha$ and $\beta_{2}$. The results from the paper can be seen in Figure 2. \par
-Overall, we tried to replicate as much as possible what the authors did. Once we had found the best hyperparameters (namely, $\alpha$ and $\beta_{2}$) as a result of our grid search, we ran each algorithm 5 times and plotted the training and test losses for each ``run''. We thought this was important to do as each algorithm has random initializations and can sometimes randomly get ``stuck'' while running. Performing each experiment allows us to see if perhaps the authors hand-picked results that went along with their hypothesis or if the results truly were consistent, even after taking into consideration the randomness of the algorithms. 
-    
-\begin{figure*}[]
+  \includegraphics[width=1\linewidth]{OG_synthetic.png}
+  \label{fig:test2}
+\end{minipage}% 
 \centering
+\break
 \begin{minipage}{0.9\textwidth}
   \centering
   \includegraphics[width=1\linewidth]{OG_results_nets.png}
   \label{fig:test2}
 \end{minipage}%
-\caption[]{The top row shows performance of ADAM and AMSGrad on logistic regression (left and center) 1-hidden layer feedforward neural network (right) on MNIST. In the bottom row, the two plots compare the training and test loss of ADAM and AMSGrad with respect to iterations for CIFARNET. Note: these graphs were taken directly from the paper.} 
+\end{minipage}
+\caption[]{Top: location of $x_t$ in the online and stochastic syntetic experiments, respectively. \\
+Middle: performance of ADAM and AMSGrad on logistic regression (left and center) 1-hidden layer feedforward neural network (right) on MNIST.\\
+Bottom: training and test loss of ADAM and AMSGrad with respect to iterations for CifarNet.\\
+These graphs were taken directly from the paper \emph{On the Conergence of Adam and Beyond} (Sashank, Kale, Kumar; 2018).} 
 \end{figure*}    
+   
     
+\section{Hindrances to Reproducability}  
+
+Although the authors take care to justify their claims and experiments with theory, they omit several key details that make it difficult to recreate their experiments exactly. These details can be broadly categorized into those which concern the experimental setup, those which conern the model architectures, and those which concern the exact values of model hyperparameters. 
+
+\subsection{Experimental Setup}
+
+In the paper, the models do not specify for how many epochs they trained each of the described classifiers.
+
+Although the images they provide [figure 1] show the number of \emph{iterations} they trained for, it is difficult to decifer what these iterations represent. 
+
+For the models trained on MNIST, the authors show that they trained for 5,000 iterations. If an iteration is defined as one batch parameter update\footnote{The authors use mini-batches of size 128 in all experiments. Thus, in the $50,000$ training examples of MNIST, one epoch would consist of $50000/128 \approx 390$ batch parameter updates.}, then 5,000 iterations would correspond to 10-20 training epochs, which is reasonable. The authors show, however, that they trained CifarNet for over 2 Million iterations. Using this same definition of an iteration, this would correspond to over $5,000$ training epochs. Given the size of CifarNet, we find it dubious that the authors trained for thousands of epochs\footnote{On an NVIDIA Kepler GK104 GRID GPU, one training epoch takes roughly 90 seconds.}.
+
+To overcome this ambiguity, we determined a number of training epochs for each model that we found reasonable. We aimed to choose a number of training epochs for each number that gives each model ample time to converge, but that can train in a reasonable time frame. Thus, we trained our logistic regression and feedforwarnd neural network models for 50 epochs, and our CifarNet models for 30 epochs. 
+
+\subsection{Model Architectures}
+
+The authors do not specify several key details of their model architectures. Most severely, they do not specify the loss function they used to learn their parameters. 
+
+In a multi-class classification setting (such as MNIST and CIFAR-10 classification), a natural choice for a loss function is categorical cross-entropy. After running our experiments using categorical-crossentropy, however, we noticed that the scale of our models' losses did not match those reported by the authors. For example, when running a feedforward neural network on MNIST, we observed training losses in roughly the range (1, 6), while the authors report losses in the range (.2, .7). 
+
+Based on these observations, we concluded that the authors must have used a loss function other than categorical-crossentropy. As an alternative, we tried using binary-crossentropy (also known as \emph{multiclass log-loss} in the multiclass setting), which is defned for a $k$ class classification problem as:
+
+\[
+Loss(\hat{y}_i, y_i) = -\sum_{k = 1}^K \big( y_{i,k}\log(\hat{y}_{i,k}) + (1 - y_{i,k})\log(1 - \hat{y}_{i,k})  \big)
+\]
+
+When using this loss function we found that our observed losses aligned more closesly with those reported by the authors in our experiments regarding the MNIST dataset. However, we observed losses much smaller than those reported by the authors when training CifarNet. 
+
+This could be becuase the authors used different loss functions in their experiments regarding MNIST and CIFAR-10. It could also be that the authors used a loss function other than categorical cross-entropy and multiclass log-loss.
+
+As the paper's results focus on the superiority of AMSGrad over Adam, we decided that the magnitude of the losses observed is less important than the relative magnitute between those achieved when training with AMSGrad, and those achieved when training with Adam. Thus, we proceeded with our experiments using the multiclass log-loss, with knowledge that this loss may be different than one one used by the authors.
+
+\subsection{Model Hyperparameters}
+
+Finally, the authors do not full detail on the hyperparameter they chose for each model. 
+
+In the CifarNet CNN model, an important hyperparameter is the stride length to use in each convoltional layer. Given just the kernel size and number of filters, one cannot deduce the stride length used by the authors\footnote{For the layer to be specified fully, either the stride length or zero-padding length should also be specified.}. Unable to resove this abiguity, we proceeded with our experiments using a stride length of one. Any discrepencies between our results and those reported by the author may be partly due to the use of different stride lengths. 
+
+The authors mention that they tune the learning rate $\alpha$ and the hyperparameter $\beta_2$ using a grid search in each of their experiments. However, they do not specify the hyperparamters they ultimately used. 
+
+This forced us to experiment with large parameter spaces when we recreated their grid searches, as we did not have an approximate neighborhood of values which we know work well in the proposed experiments. As training deep networks such as CifarNet is very slow, exhaustive searches are very costly. Thus, omitting the final hyperparameters introduces computational barriers to reproducing the authors' results well. 
+
+\section{METHODOLOGY}
+
+\textbf{Here lies a brief description of what we did - tuning, training multiple runs.}
+
+\subsection{Hyperparemter Tuning}
+
+\textbf{Here lies details on hyperparameter tuning}
+
+\subsection{Reproduced Experiments}
+
+\textbf{Here lies details on experiments ran - number of runs, configs etc}
+
 \section{RESULTS}
+
+\textbf{Here lies details on results (graphs).}
+
+\section{DISCUSSION AND CONCLUSION}
+
+\textbf{Here lies comparison of our results with authors'. Are they the the same for each model? Are they as conclusive? Are the authors ignoring variability in in their models? }
+
+
+
+\section{RESULTS}
+
 The results for the synthetic experiments are shown in Figure 3 (haven't put it in yet). \par
 The results for the MNIST and CIFAR-10 experiments are in Figure 4. Similar to what is seen in the results provided by the authors, we have that AMSGrad has a slightly lower loss than ADAM for these experiments. We also observe quite a small loss for our CIFAR-10 experiments, about 0.05 for both training and test losses. This is a much smaller loss than what was observed by the authors, who achieved about 0.3 training loss with AMSGrad and about 0.6 test loss with AMSGrad. We do not know what loss the authors used however, which could be the source of the discrepancy. Overall, the general trends we observe in our results coincide with the general trends reported by the authors. 
 
@@ -183,8 +310,49 @@ Furthermore, CNN's also require a GPU to significantly speed up the amount of ti
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{thebibliography}{99}
+\bibitem{c1} R. Sashank, S. Kale, S. Kumar, (2018). On the Convergence of Adam and Beyond. In Proceedings of \emph{International Conference on Learning Representations}, http://https://openreview.net/forum?id=ryQu7f-RZ (link is external)
+\bibitem{c2} Diederik P. Kingma and Jimmy Ba (2015). Adam: A method for stochastic optimization. In Proceedings
+of \emph{3rd International Conference on Learning Representations, 2015.}
+\bibitem{c3} Chollet, Fran\c{c}ois and others, 2015. Keras: \url{https://keras.io}
+\bibitem{c4} T. Tieleman and G. Hinton. RmsProp: Divide the gradient by a running average of its recent magnitude.
+\bibitem{c5} John C. Duchi, Elad Hazan, and Yoram Singer. Adaptive subgradient methods for online learning
+and stochastic optimization. Journal of Machine Learning Research, 12:2121–2159, 2011.
 
+\section*{Blog Posts}
 
+\bibitem{c5} Brownlee, J. (2016, August 9). Tuning optimization parameters using a gridsearch. Retrieved from https://machinelearningmastery.com/grid-search-hyperparameters-deep-learning-models-python-keras/
+\bibitem{c6} Korzeniowski, F. (2017, December 22). Experiments with AMSGrad. Retrieved from https://fdlm.github.io/post/amsgrad/
+
+\end{thebibliography}
+\newpage
+\section{APPENDIX}
+\subsection{Appendix 1: Model Architectures}
+\begin{figure}[H]
+      \centering
+      \includegraphics[scale = .3]{cifarnet_model.png}
+		\centering
+      %\includegraphics[scale=1.0]{figurefile}
+      \caption{CifarNet architecture; a deep Convolutional Neural Network designed to classify images in the Cifar-10 dataset.}
+      \label{figurelabel}
+\end{figure}
+    
+\begin{figure}[]
+      \centering
+      \includegraphics[scale = .3]{logreg_model.png}
+		\centering
+      \caption{Logistic Regression model, implemented as a feedforward neural network with no hidden layers.}
+      \label{figurelabel}
+\end{figure}
+
+\begin{figure}[]
+      \centering
+      \includegraphics[scale = .3]{ffnn_model.png}
+		\centering
+      %\includegraphics[scale=1.0]{figurefile}
+      \caption{Feedforward Neural Network Architecture, trained on MNIST 28x28 greyscale images.}
+      \label{figurelabel}
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
