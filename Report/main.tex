@@ -76,7 +76,7 @@ A Closer Look At The Convergence of Adam and AMSGrad:\\A Reproduction Study
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-In this reproduction study, we assess the reproducibility and validity of the results reported in the paper \emph{On the Convergence of Adam and Beyond}. The authors of this paper, Sashank, Kale and Kumar, discuss issues with the popular stochastic gradient descent, \emph{Adam}, and present a solution, \emph{AMSGrad}. We reproduced very similar results to those found in the paper, yet not without cost. (Finish up in some way). 
+In this reproduction study, we assess the reproducibility and validity of the results reported in the paper \emph{On the Convergence of Adam and Beyond}. The authors of this paper, Sashank, Kale and Kumar, discuss issues with the popular stochastic gradient descent optimization algorithm, \emph{Adam}, and present a solution, \emph{AMSGrad}. We reproduced quite similar results to those found in the paper, yet not without costs. (Finish up in some way). 
 \end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -211,49 +211,6 @@ Middle: performance of ADAM and AMSGrad on logistic regression (left and center)
 Bottom: training and test loss of ADAM and AMSGrad with respect to iterations for CifarNet.\\
 These graphs were taken directly from the paper \emph{On the Conergence of Adam and Beyond} (Sashank, Kale, Kumar; 2018).} 
 \end{figure*}    
-   
-    
-\section{Hindrances to Reproducibility}  
-
-Although the authors take care to justify their claims and experiments with theory, they omit several key details that make it difficult to recreate their experiments exactly. These details can be broadly categorized into those which concern the experimental setup, those which conern the model architectures, and those which concern the exact values of model hyperparameters. 
-
-\subsection{Experimental Setup}
-
-In the paper, the models do not specify for how many epochs they trained each of the described classifiers.
-
-Although the images they provide [figure 1] show the number of \emph{iterations} they trained for, it is difficult to decifer what these iterations represent. 
-
-For the models trained on MNIST, the authors show that they trained for 5,000 iterations. If an iteration is defined as one batch parameter update\footnote{The authors use mini-batches of size 128 in all experiments. Thus, in the $50,000$ training examples of MNIST, one epoch would consist of $50000/128 \approx 390$ batch parameter updates.}, then 5,000 iterations would correspond to 10-20 training epochs, which is reasonable. The authors show, however, that they trained CifarNet for over 2 Million iterations. Using this same definition of an iteration, this would correspond to over $5,000$ training epochs. Given the size of CifarNet, we find it dubious that the authors trained for thousands of epochs\footnote{On an NVIDIA Kepler GK104 GRID GPU, one training epoch takes roughly 90 seconds.}.
-
-To overcome this ambiguity, we determined a number of training epochs for each model that we found reasonable. We aimed to choose a number of training epochs for each number that gives each model ample time to converge, but that can train in a reasonable time frame. Thus, we trained our logistic regression and feedforwarnd neural network models for 50 epochs, and our CifarNet models for 30 epochs. 
-
-\subsection{Model Architectures}
-
-The authors do not specify several key details of their model architectures. Most severely, they do not specify the loss function they used to learn their parameters. 
-
-In a multi-class classification setting (such as MNIST and CIFAR-10 classification), a natural choice for a loss function is categorical cross-entropy. After running our experiments using categorical-crossentropy, however, we noticed that the scale of our models' losses did not match those reported by the authors. For example, when running a feedforward neural network on MNIST, we observed training losses in roughly the range (1, 6), while the authors report losses in the range (.2, .7). 
-
-Based on these observations, we concluded that the authors must have used a loss function other than categorical-crossentropy. As an alternative, we tried using binary-crossentropy (also known as \emph{multiclass log-loss} in the multiclass setting), which is defned for a $k$ class classification problem as:
-
-\[
-Loss(\hat{y}_i, y_i) = -\sum_{k = 1}^K \big( y_{i,k}\log(\hat{y}_{i,k}) + (1 - y_{i,k})\log(1 - \hat{y}_{i,k})  \big)
-\]
-
-When using this loss function we found that our observed losses aligned more closesly with those reported by the authors in our experiments regarding the MNIST dataset. However, we observed losses much smaller than those reported by the authors when training CifarNet. 
-
-This could be becuase the authors used different loss functions in their experiments regarding MNIST and CIFAR-10. It could also be that the authors used a loss function other than categorical cross-entropy and multiclass log-loss.
-
-As the paper's results focus on the superiority of AMSGrad over Adam, we decided that the magnitude of the losses observed is less important than the relative magnitute between those achieved when training with AMSGrad, and those achieved when training with Adam. Thus, we proceeded with our experiments using the multiclass log-loss, with knowledge that this loss may be different than one one used by the authors.
-
-\subsection{Model Hyperparameters}
-
-Finally, the authors do not full detail on the hyperparameter they chose for each model. 
-
-In the CifarNet CNN model, an important hyperparameter is the stride length to use in each convoltional layer. Given just the kernel size and number of filters, one cannot deduce the stride length used by the authors\footnote{For the layer to be specified fully, either the stride length or zero-padding length should also be specified.}. Unable to resove this abiguity, we proceeded with our experiments using a stride length of one. Any discrepencies between our results and those reported by the author may be partly due to the use of different stride lengths. 
-
-The authors mention that they tune the learning rate $\alpha$ and the hyperparameter $\beta_2$ using a grid search in each of their experiments. However, they do not specify the hyperparamters they ultimately used. 
-
-This forced us to experiment with large parameter spaces when we recreated their grid searches, as we did not have an approximate neighborhood of values which we know work well in the proposed experiments. As training deep networks such as CifarNet is very slow, exhaustive searches are very costly. Thus, omitting the final hyperparameters introduces computational barriers to reproducing the authors' results well. 
 
 \section{METHODOLOGY}
 
@@ -269,35 +226,70 @@ This forced us to experiment with large parameter spaces when we recreated their
 
 \section{RESULTS}
 
-\textbf{Here lies details on results (graphs).}
+\begin{figure*}
+\begin{minipage}{1\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{Our_Results.png}
+  \label{fig:test2}
+\end{minipage}%
+\caption[]{Top: location of $x_t$ in the online and stochastic synthetic experiments, respectively. \\
+Middle: performance of ADAM and AMSGrad on logistic regression (left and center) 1-hidden layer feedforward neural network (right) on MNIST.\\
+Bottom: training and test loss of ADAM and AMSGrad with respect to iterations for CifarNet.\\
+These graphs were taken directly from the paper \emph{On the Convergence of Adam and Beyond} (Sashank, Kale, Kumar; 2018).} 
+\end{figure*}  
+
+The results for all the experiments can be seen in Figure 2. In the synthetic experiments, our results for both the online and stochastic settings are virtually identical to the results presented in the paper. The only difference is that our AMSGrad converged more quickly to the optimal $x$ value than in the paper, otherwise the results are very comparable.
+
+For the MNIST and CIFAR-10 experiments, we have that AMSGrad has a slightly lower loss than Adam. This is what we see in the original results, however, the original results have a slightly larger difference in loss between the two optimizers than what we observed. We also see quite a small loss for our CIFAR-10 experiments, about 0.05 for both training and test losses. This is quite a significantly smaller loss than what was observed by the authors, who achieved about 0.3 training loss with AMSGrad and about 0.6 test loss with AMSGrad. That said, the general trends we observe in our results coincide with the general trends reported by the authors. 
 
 \section{DISCUSSION AND CONCLUSION}
 
-\textbf{Here lies comparison of our results with authors'. Are they the the same for each model? Are they as conclusive? Are the authors ignoring variability in in their models? }
+Although the authors take care to justify their claims and experiments with theory, they omit several key details that make it difficult to recreate their experiments exactly. These details can be broadly categorized into those which concern the experimental setup, those which concern the model architectures, and those which concern the exact values of model hyperparameters. 
+
+\subsection{Experimental Setup}
+
+In the paper, the models do not specify for how many epochs they trained each of the described classifiers.
+
+Although the images they provide [Figure 1] show the number of \emph{iterations} they trained for, it is difficult to decipher what these iterations actually represent. 
+
+For the models trained on MNIST, the authors show that they trained for 5,000 iterations. If an iteration is defined as one batch parameter update\footnote{The authors use mini-batches of size 128 in all experiments. Thus, in the $50,000$ training examples of MNIST, one epoch would consist of $50000/128 \approx 390$ batch parameter updates.}, then 5,000 iterations would correspond to 10-20 training epochs, which is reasonable. The authors show, however, that they trained CifarNet for over 2 million iterations. Using this same definition of an iteration, this would correspond to over $5,000$ training epochs. Given the size of CifarNet, we find it dubious that the authors trained for thousands of epochs\footnote{On an NVIDIA Kepler GK104 GRID GPU, one training epoch takes roughly 90 seconds.}.
+
+To overcome this ambiguity, we determined a number of training epochs for each model that we found reasonable. We aimed to choose a number of training epochs for each number that gives each model ample time to converge, but that can train in a reasonable time frame. Thus, we trained our logistic regression and feedforwarnd neural network models for 50 epochs and our CifarNet models for 30 epochs. 
+
+\subsection{Model Architectures}
+
+The authors do not specify several key details of their model architectures. Most severely, they do not specify the loss function they used to learn their parameters. 
+
+In a multi-class classification setting (such as MNIST and CIFAR-10 classification), a natural choice for a loss function is categorical cross-entropy. After running our experiments using categorical-crossentropy, however, we noticed that the scale of our models' losses did not match those reported by the authors. For example, when running a feedforward neural network on MNIST, we observed training losses in roughly the range (1, 6), while the authors report losses in the range (.2, .7). 
+
+Based on these observations, we concluded that the authors must have used a loss function other than categorical-crossentropy. As an alternative, we tried using binary-crossentropy (also known as \emph{multiclass log-loss} in the multiclass setting), which is defned for a $k$ class classification problem as:
+
+\[
+Loss(\hat{y}_i, y_i) = -\sum_{k = 1}^K \big( y_{i,k}\log(\hat{y}_{i,k}) + (1 - y_{i,k})\log(1 - \hat{y}_{i,k})  \big)
+\]
+
+When using this loss function we found that our observed losses aligned more closely with those reported by the authors in our experiments regarding the MNIST dataset. However, we observed losses much smaller than those reported by the authors when training CifarNet. 
+
+This could be because the authors used different loss functions between their experiments regarding MNIST and CIFAR-10. It could also be that the authors used a loss function other than categorical cross-entropy and multiclass log-loss.
+
+As the paper's results focus on the superiority of AMSGrad over Adam, we decided that the magnitude of the losses observed is less important than the relative magnitude between those achieved when training with AMSGrad, and those achieved when training with Adam. Thus, we proceeded with our experiments using the multiclass log-loss, with knowledge that this loss may be different than the one used by the authors.
+
+\subsection{Model Hyperparameters}
+
+Finally, the authors do not go into full detail on the hyperparameters they chose for each model. 
+
+In the CifarNet CNN model, an important hyperparameter is the stride length to use in each convoltional layer. Given just the kernel size and number of filters, one cannot deduce the stride length used by the authors\footnote{For the layer to be specified fully, either the stride length or zero-padding length should also be specified.}. Unable to resolve this ambiguity, we proceeded with our experiments using a stride length of one. Any discrepancies between our results and those reported by the author may be partly due to the use of different stride lengths. 
+
+The authors mention that they tune the learning rate $\alpha$ and the hyperparameter $\beta_2$ using a grid search in each of their experiments. However, they do not specify the hyperparameters they ultimately used. 
+
+This forced us to experiment with large parameter spaces when we recreated their grid searches, as we did not have an approximate neighborhood of values which we knew worked well in the proposed experiments. As training deep networks such as CifarNet is very slow, exhaustive searches are very costly. Thus, omitting the final hyperparameters introduces computational barriers to reproducing the authors' results well. The grid search for CifarNet took about 28 hours to complete, which is quite a significant amount of time that could have been greatly reduced had the authors either given us the exact values of the best hyperparameters they found, or at the very least given a range for the $\alpha$ values they looked through. 
+
+NOT SURE HOW TO ORGANIZE - bc below is unrelated to hindrances of reproducibility; ps feel free to reword
+
+Lastly, we assess the validity of the author's claims based on their results. The authors present the issue with Adam as though it is an incredibly pervasive and serious problem when performing deep learning. As we have seen in this reproducibility study, though it is true that AMSGrad performs better than Adam (in the experiments presented), it is not as significant an improvement as the authors made it seem. Because we ran each experiment several times, as opposed to the authors who report only one run of each experiment, we saw that some runthroughs matched the authors' results very closely, while in other runthroughs, the difference between Adam and AMSGrad seemed quite insignificant. The synthetic experiment is the only experiment where it is clear that AMSGrad performs much better. However, it should be noted that this experiment was devised as the perfect example where Adam will perform poorly and it is not clear how many of these 'perfect' examples arise in practice. 
 
 
-
-\section{RESULTS}
-
-The results for the synthetic experiments are shown in Figure 3 (haven't put it in yet). \par
-The results for the MNIST and CIFAR-10 experiments are in Figure 4. Similar to what is seen in the results provided by the authors, we have that AMSGrad has a slightly lower loss than ADAM for these experiments. We also observe quite a small loss for our CIFAR-10 experiments, about 0.05 for both training and test losses. This is a much smaller loss than what was observed by the authors, who achieved about 0.3 training loss with AMSGrad and about 0.6 test loss with AMSGrad. We do not know what loss the authors used however, which could be the source of the discrepancy. Overall, the general trends we observe in our results coincide with the general trends reported by the authors. 
-
-\begin{figure*}[]
-\centering
-\begin{minipage}{0.9\textwidth}
-  \centering
-  \includegraphics[width=1\linewidth]{Fig4.png}
-  \label{fig:test4}
-\end{minipage}%
-\caption[]{The top row shows performance of ADAM and AMSGrad on logistic regression (left and center) 1-hidden layer feedforward neural network (right) on MNIST. In the bottom row, the two plots compare the training and test loss of ADAM and AMSGrad with respect to iterations for CIFARNET. These graphs are meant to coincide with the graphs in Figure 2, which were graphs provided by the authors.} 
-\end{figure*} 
-
-\section{DISCUSSION}
-The authors did quite a nice job of describing in detail what they did in each experiment they ran. For example, the full architectures of the two neural networks they trained were fully specified. Additionally, they stated the exact value of hyperparameters they did not tune (for example $\beta_{1}$) and gave a range for $\beta_{2}$ which they did tune. They also mentioned that they used a grid search to tune these parameters, so we knew to do that as well. \par
-This is not to say that the authors' work was perfectly reproducible. Though they mentioned the range of $\beta_{2}$ values they tried, they did not give a range of $\alpha$ values for any of the experiments that they ran. Furthermore, though it is likely that they used categorical cross-entropy loss in the classification experiments, they do not explicitly state so. In their results, the authors often plotted the training or test loss against the number of iterations, but they do not define what they consider to be an iteration. We are fairly confident that one iteration means one run through one mini-batch, however, without the authors stating explicitly, we cannot be certain. Because of this, we are unsure of exactly how long the authors ran each experiment. To work around this, we ran each experiment until there was very little change in loss from one epoch to the next, as is usually done and this seems to be what the authors did, since we achieved similar results. However, in terms of absolute reproducibility of their results, this impeded our ability to reproduce the results exactly. \par
-The biggest shortcoming of this paper is likely that the authors never state what they got to be the best hyperparameters after performing a grid search. Because we were able to get very similar results to the, we believe that the hyperparameters must be the same, yet we have no way to confirm. \par
-Though we were able to produce extremely similar results to those provided in the original paper, these results did not come at a low cost. Because the authors did not provide a range of $\alpha$ values they tried for any of their experiments, we had to use a  wide range in our grid search to ensure that we likely explored all of the same possible values the authors had explored. Grid searches take a long time to run (INSERT LENGTH OF TIME FOR EACH EXPERIMENT HERE). This problem was exacerbated for the CIFAR-10 experiments as CNN's already take a long time to train (about 2 hours) and so to also do a grid search took (about 28 hours?). Thought it was useful that the authors stated they performed a grid search to do all hyperparameter tuning, it would have saved a lot of time and effort if they had simply stated what the best hyperparameters were that they found. This also would have made it much easier to decide if the results were reproducible or not as we would have been able to follow more exactly what the authors did. \par
-Furthermore, CNN's also require a GPU to significantly speed up the amount of time required to train. This required us to use Amazon Web Services which required much more setup than simply running all of the code within our own machines. We chose to use Amazon Web Services rather than Google Collab because AWS was something that we had worked with before. Additionally, Google Collab would terminate if we let the screen of the computer turn off and considering we were running the CNNs overnight, this was not ideal. 
+ 
 \addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
                                   % on the last page of the document manually. It shortens
                                   % the textheight of the last page by a suitable amount.
