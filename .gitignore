@@ -3,3 +3,6 @@
 *.checkpoints
 *.csv
 *.ipynb_checkpoints
+main.log
+main.out
+main.aux
