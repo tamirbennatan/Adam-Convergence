@@ -76,20 +76,20 @@ A Closer Look At The Convergence of Adam and AMSGrad:\\A Reproduction Study
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. This is filler. Here goes a short abstract. 
+In this reproduction study, we assess the reproducibility and validity of the results reported in the paper \emph{On the Convergence of Adam and Beyond}. The authors of this paper, Sashank, Kale and Kumar, discuss issues with the popular stochastic gradient descent, \emph{Adam}, and present a solution, \emph{AMSGrad}. We reproduced very similar results to those found in the paper, yet not without cost. (Finish up in some way). 
 \end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{INTRODUCTION}
 
-Amongst the deep learning community, Stochastic Gradient Descent (SGD) is the predominant method of training deep neural networks. As researchers and practitioners continue to experiment with larger networks with parameter spaces reaching hundreds of millions of dimensions, it has become of increasingly important in recent decades to optimize SGD, so that it may train large networks faster and more effectively. 
+Amongst the deep learning community, Stochastic Gradient Descent (SGD) is the predominant method of training deep neural networks. As researchers and practitioners continue to experiment with large networks and parameter spaces reaching hundreds of millions of dimensions, it has become increasingly important in recent decades to optimize SGD, so that it may train large networks faster and more effectively. 
 
 One such optimization to SGD is \emph{Adam} (Kingma, Ba; 2015). Inspired by previous variants of SGD which  apply time varying learning rates and momentum terms such as AdaGrad (Duchi et al.,
-2011) and RMSProp (Tieleman \& Hinton, 2012), Adam adjusts the learning rates and momentum terms associated with each paramter of a network using an eponential moving averages. In recent years, Adam has been shown to be effective in meany deep learning settings, and is considered a state of the art technique. 
+2011) and RMSProp (Tieleman \& Hinton, 2012), Adam adjusts the learning rates and momentum terms associated with each parameter of a network using exponential moving averages. In recent years, Adam has been shown to be effective in many deep learning settings, and is considered a state of the art technique. 
 
-In the paper \emph{On the Convergence of Adam and Beyond}, authors Sashank, Kale and Kumar (2018) present a defect in the Adam method. Since Adam uses exponential moving averages of squared past gradients, the influence on past paramter updates drops off quickly - effectively limiting the reliance of parameter updates to a small set of recent gradients. The authors show that because of this property, Adam will fail to converge in convex optimization problems where large, informative gradients occur infrequently. 
+In the paper \emph{On the Convergence of Adam and Beyond}, authors Sashank, Kale and Kumar (2018) present a defect in the Adam method. Since Adam uses exponential moving averages of squared past gradients, the influence of these gradients on past parameter updates drops off quickly - effectively limiting the reliance of parameter updates to a small set of recent gradients. The authors show that because of this property, Adam will fail to converge in convex optimization problems where large, informative gradients occur infrequently. 
 
-The authors propose a new optimization scheme - \emph{AMSGrad}, which aims to remedy this issue in Adam. To demonstrate that AMSGrad performs better than Adam, they devise a syntethic convex optimization problem, and show that AMSGrad converges to the optimzal solution, while Adam does not. They then train modest neural networks on the widely used MNIST and CIFAR-10 datasets using the Adam and AMSGrad optimizers, and show that AMSGrad converges to a lower loss than Adam. 
+The authors propose a new optimization scheme - \emph{AMSGrad}, which aims to remedy this issue with Adam. To demonstrate that AMSGrad performs better than Adam, they devise a syntethic convex optimization problem, and show that AMSGrad converges to the optimal solution, while Adam does not (in fact it converges to a highly suboptimal solution). They then train modest neural networks on the widely used MNIST and CIFAR-10 datasets using the Adam and AMSGrad optimizers, and show that AMSGrad converges to a lower loss than Adam. 
 
 In this paper, we recreate the experiments described in the paper\footnote{We refer to \emph{On the Convergence of Adam and Beyond} as simply \emph{``the paper"}, and \emph{``the authors"} as the authors of this paper throughout.} and aim to reproduce the authors' results. We compare our results with those of the authors, and discuss the challenges in recreating the experiments described in this paper. Finally, we present a brief sensitivity analysis, to gauge the variability in our findings.
 
@@ -97,7 +97,7 @@ In this paper, we recreate the experiments described in the paper\footnote{We re
 
 Adaptive optimization procedures such as Adam yield different effecive learning rates for each of the different parameters of a model. Adam computes the effective learning rate using an exponential moving average of past squared gradients. 
 
-If we consider a model with a single parameter, $\theta$, then Adam uses the following update step to optimize the function $f(x)$ at time $t$:
+If we consider a model with a single parameter, $\theta$, then Adam uses the following update step to optimize the function $f_{t}(x)$ at time $t$:
 
 \begin{algorithm}
 \caption{Adam Update Rule}\label{Adam-update}
@@ -110,7 +110,7 @@ If we consider a model with a single parameter, $\theta$, then Adam uses the fol
 \State $\theta_{t + 1} := \theta_t - \alpha{v_t}$
 \end{algorithmic}
 \end{algorithm}
-Where $\alpha$ is the learning rate, and $(\beta_1, \beta_2)$ are hyperparameters chosen from the range $(0,1)$.
+Where $\alpha$ is the learning rate, and $(\beta_1, \beta_2)$ are hyperparameters chosen in the range $(0,1)$.
 
 The exponential moving average terms on lines 2 and 3 of Alg. 1 reduce the reliance of each update on past gradients geometrically. The authors show that because of this property, the effective learning rate of each parameter is not guarenteed to be non-decreasing, which causes convergence issues in particular settings. 
 
@@ -128,27 +128,27 @@ To account for this, the authors modify Adam to ``remember" large gradients from
 \end{algorithmic}
 \end{algorithm}
 
-Line 4 of Alg. 2 enables AMSGrad to propogate the large gradients into the future, which increases their affect on future updates. The authors show that after making this small adjustment, AMSGrad guarentees non-increasing effective learning rates, and favorable convergence behaviour.
+Line 4 of Alg. 2 enables AMSGrad to propogate the large gradients into the future, which increases their effect on future updates. The authors show that after making this small adjustment, AMSGrad guarentees non-increasing effective learning rates, and favorable convergence behaviour.
 
-To illistrate this, the authors propose a simple convex function on the domain $x \in [-1,1]$.:
+To illustrate this, the authors propose a simple convex function on the domain $x \in [-1,1]$:
 \[
-    f(x) = 
+    f_{t}(x) = 
     \begin{cases}
      	Cx, \hspace{5mm} \text{for } t \text{ mod 3 = 1} \\
         -x, \hspace{5mm} \text{otherwise}
     \end{cases}
 \]
-for $C>2$. The minimum value of  the value of $f$ is achieved at $x=-1$. However, the authors show that Adam converges to the suboptimal solution of $x = 1$, due to the fact that the large gradients with magnitude $C$ are recieved in large intervals. The influence of the large gradient $C$ disappears too quickly to counteract the gradients of $-1$, which moves the algorithm in the wrong direction. AMSGrad, on the other hand, is designed to account for these settings, and minimizes this function without difficulty.
+for $C>2$. The minimum value of $f$ is achieved at $x=-1$. However, the authors show that Adam converges to the suboptimal solution of $x = 1$, due to the fact that the large gradients with magnitude $C$ are only observed once every three time steps. The influence of this large gradient $C$ disappears too quickly to counteract the gradients of $-1$, which move the algorithm in the wrong direction. AMSGrad, on the other hand, is designed to account for these settings, and minimizes this function without difficulty.
 
 \section{Experiments}
 
 
-The authors ran several experiments to compare the performance of ADAM and AMSGrad. In this section, we 
+The authors ran several experiments to compare the performance of Adam and AMSGrad. In this section, we 
 describe the experiments run by the authors, and their reported results. 
 
 \subsection{Synthetic Experiments}
 
-The authors construct two convex functions on the domain $x \in [-1,1]$, designed to highlight Adam's shortcomings:
+The authors construct two convex functions, similar to the one described in Section II, on the domain $x \in [-1,1]$, designed to highlight Adam's shortcomings:
 
 \[
     f_{t}(x) = 
@@ -160,36 +160,36 @@ The authors construct two convex functions on the domain $x \in [-1,1]$, designe
 where $t$ is the time step at which the function is evaluated, and:
 
 \[
-    f(x) = 
+    f_{t}(x) = 
     \begin{cases}
      	1010x, \hspace{5mm} \text{with probability 0.01}\\
         -10x, \hspace{5mm} \text{otherwise}
     \end{cases}
 \]
 
-Both functions reach a global minimum at $x = -1$. The first is refered to as the ``online setting", and the second as the ``stochastic setting."
+Both functions reach a global minimum at $x = -1$. The first is referred to as the ``online setting", and the second as the ``stochastic setting."
 
-In the first experiment, the authors use Adam and AMSGrad to minimize both functions, and compare the convergence behaviour of each optimizer. The authors fix the values of  $\beta_{1}$ and $\beta_{2}$ as the authors at 0.9 and 0.99, respectively, and perform a grid search to find a learning rate $\alpha$ which yields good convergence for both optimizers. 
+In the first experiment, the authors use Adam and AMSGrad to minimize both functions, and compare the convergence behaviour of each optimizer. The authors fix the values of  $\beta_{1}$ and $\beta_{2}$ at 0.9 and 0.99, respectively, and perform a grid search to find a learning rate $\alpha$ which yields good convergence for both optimizers. 
 
 \subsection{Logistic Regression on MNIST}
 
-The authors then investigated the performance of the algorithm on a logistic regression problem. They used the MNIST dataset, which contains 70,000 28x28 images of handwritten digits, labeled as one of 10 classes. The authors decrease the learning rate over time, where the effective learning rate $\alpha_t$ at time $t$ is defined as $\alpha / \sqrt{t}$. The authors train using minibatches of size of 128, and fix  $\beta_{1}$ as 0.9. They then perform grid search to select a value for $\beta_2$ in the range $(0.99, 0.999)$, based on what value yields the lowest validation loss for each optimizer. 
+The authors then investigated the performance of the algorithm on a logistic regression problem. They used the MNIST dataset, which contains 70,000 28x28 images of handwritten digits, labeled as one of 10 classes. The authors decrease the learning rate over time, where the effective learning rate $\alpha_t$ at time $t$ is defined as $\alpha / \sqrt{t}$. The authors train using minibatches of size 128, and fix  $\beta_{1}$ to be 0.9. They then perform a grid search to select a value for $\beta_2$ in the range $(0.99, 0.999)$, and to select a value for $\alpha$, for which no range of values is provided. These hyperparameters were then chosen based on which value yielded the lowest validation loss for each optimizer. 
 
 \subsection{Feedforward Neural Network on MNIST}
 
-The authors trained a feedforward neural network (FFNN) with one hidden layer on the MNIST dataset as well. The hidden layer consists of 100 neurns, and use the ReLU nonlinearity. The authors fix $\beta_{1} = 0.9$, and use a grid to select $\beta_{2}$ from the range $(0.99, 0.999)$, based on which value yields the lowest validation loss for each optimizer.
+The authors trained a feedforward neural network (FFNN) with one hidden layer on the MNIST dataset as well. The hidden layer consists of 100 neurons, and uses the ReLU nonlinearity. The authors fix $\beta_{1} = 0.9$, and use a grid search to select $\beta_{2}$ from the range $(0.99, 0.999)$, and to select a value for $\alpha$, for which no range of values is provided. These hyperparameters were then chosen based on which value yielded the lowest validation loss for each optimizer. 
 
 \subsection{Convolutional Neural Network on CIFAR-10}
 
-Finally, the authors experiment with a larger convolutional neural network (CNN), designed to classify images in the CIFAR-10 dataset. CIFAR-10 consists fo 60,000  32 x 32, labeled as one of 10 classes.
+Finally, the authors experiment with a larger convolutional neural network (CNN), designed to classify images in the CIFAR-10 dataset. CIFAR-10 consists of 60,000  32 x 32 images, labeled as one of 10 classes.
 
 The authors specify the architecture that they used (named \emph{Cifarnet}), which consists of two convolutional layers, max-pooling and batch-normilization layers, and two fully connected layers (see appendix 1 for a detailed specification of the architecture.)
 
-The authors trained CifarNet using a minibath of size 128 using each of the two optimizers.The authors fix $\beta_{1} = 0.9$, and perform a grid search to select $\beta_{2}$ from the range $(0.99, 0.999)$.
+The authors trained CifarNet using a minibath of size 128 using each of the two optimizers.The authors fix $\beta_{1} = 0.9$, and perform a grid search to select $\beta_{2}$ from the range $(0.99, 0.999)$, and to select a value for $\alpha$, for which no range of values is provided. These hyperparameters were then chosen based on which value yielded the lowest validation loss for each optimizer. 
 
 \subsection{Results}
 
-The authors present their results by visualizing the losses of their models achieved during training using Adam and AMSGrad for each of the experiments discussed [figure 1]. These plots show that in all of the experiments, models trained using AMSGrad achieved lower losses and converged faster than those trained with Adam. These results bolster the author's claims that AMSGrad's dependence on long term gradients indeed ameliorates its convergence behavior.
+The authors present their results by visualizing the losses of their models achieved during training using Adam and AMSGrad for each of the experiments discussed [Figure 1]. These plots show that in all of the experiments, models trained using AMSGrad achieved lower losses and converged faster than those trained with Adam. These results bolster the author's claims that AMSGrad's dependence on long term gradients indeed ameliorates its convergence behavior.
 \begin{figure*}
 \begin{minipage}{1\textwidth}
 \centering
@@ -213,7 +213,7 @@ These graphs were taken directly from the paper \emph{On the Conergence of Adam 
 \end{figure*}    
    
     
-\section{Hindrances to Reproducability}  
+\section{Hindrances to Reproducibility}  
 
 Although the authors take care to justify their claims and experiments with theory, they omit several key details that make it difficult to recreate their experiments exactly. These details can be broadly categorized into those which concern the experimental setup, those which conern the model architectures, and those which concern the exact values of model hyperparameters. 
 
@@ -359,4 +359,5 @@ and stochastic optimization. Journal of Machine Learning Research, 12:2121–215
 
 
 \end{document}
+
 
