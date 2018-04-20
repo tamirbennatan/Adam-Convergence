@@ -218,9 +218,19 @@ These graphs were taken directly from the paper \emph{On the Conergence of Adam 
 
 \subsection{Hyperparemter Tuning}
 
+\subsubsection{Synthetic experiments}
+
+The synthetic experiments have three hyperparameters, the weights $\beta 1$ and $beta 2$ and the initial learning rate, $alpha$. The two first being fixed by the paper (to 0.9 and 0.99 respectively), the hyperparameter tuning process focused only on the latest. The trade off is the following: choosing low values of alpha leads to a slow convergence, whereas large values allow the algorithm to converge faster, but with less stability (i.e. the algorithm “oscillates” around its convergence value).
+As no objective function for convergence speed and stability exists to our knowledge, the tuning had to be done manually. It quickly turned out that no fixed value gives satisfactory results. Indeed, in the reference graphs, the algorithm converges fast at the beginning, which corresponds to a large alpha and is relatively stable (i.e. few oscillations), which typically happens when alpha is low. To address this issue, a learning rate decay mechanism was added to the algorithm. This worked particularly well for the stochastic setting, whereas no significant difference was observed in the online setting.
+The final values are $\alpha$ = 0.01 without decay for the online setting and $\alpha$ = 0.5 with decay for the stochastic setting. The two other hyperparameters, $\beta 1$ and $\beta 2$ were fixed at 0.9 and 0.99 respectively as described in the paper.
+
 \textbf{Here lies details on hyperparameter tuning}
 
 \subsection{Reproduced Experiments}
+
+\subsubsection{Synthetic experiments}
+To get more control on our experiments, we implemented the Adam and AMSgrad algorithms from scratch. They were designed as classes which keeps the value of a parameter and updates it with a gradient when the method “step” is called. This design allows to inject gradients in the algorithm. These gradients are generated with a mod operation in the online setting and a random generator in the stochastic setting.
+The first experiment was to reproduce the results described in the paper, to check their reproducibility. Further experiments were designed to check the significance of the gradients, as well as the influence of the learning rate in the convergence of both algorithm. To this effect, we tried various values for the mod, and different values of alpha.
 
 \textbf{Here lies details on experiments ran - number of runs, configs etc}
 
